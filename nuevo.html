@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meteo Advisor</title>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .sidebar {
+      width: 300px;
+      background-color: #3366cc;
+      color: white;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar h1 {
+      font-size: 28px;
+      border-bottom: 2px solid white;
+      padding-bottom: 10px;
+    }
+
+    .sidebar select {
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+    }
+
+    .map-container {
+      flex: 1;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h1>Meteo Advisor</h1>
+      <select>
+        <option value="">Categoría 1</option>
+        <option value="">Categoría 2</option>
+        <option value="">Categoría 3</option>
+      </select>
+      <select>
+        <option value="">Enlace 1</option>
+        <option value="">Opción A</option>
+        <option value="">Opción B</option>
+      </select>
+      <select>
+        <option value="">Enlace 2</option>
+        <option value="">Opción C</option>
+        <option value="">Opción D</option>
+      </select>
+      <select>
+        <option value="">Enlace 3</option>
+        <option value="">Opción E</option>
+        <option value="">Opción F</option>
+      </select>
+    </div>
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <script>
+    const map = L.map('map').setView([20, 0], 2); // Centrado en lat=20, lon=0, zoom 2
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    
+}).addTo(map);
+
+// Cambiar cursor a pointer cuando está sobre el mapa
+const mapContainer = document.getElementById('map');
+map.getContainer().style.cursor = 'pointer';
+mapContainer.style.width = '1910px';
+mapContainer.style.height = '600px';
+  </script>
+</body>
+</html>
