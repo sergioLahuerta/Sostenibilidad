@@ -1,103 +1,1251 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meteo Advisor</title>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Climate Events Monitor</title>
+    
+     <!-- Leaflet CSS  -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+     <!-- Custom CSS  -->
+    <style>
+        /* CSS Variables for Dark Theme */
+        :root {
+            --nasa-blue: 59 130 246;
+            --nasa-blue-dark: 37 99 235;
+            --nasa-green: 16 185 129;
+            --nasa-orange: 245 158 11;
+            --nasa-red: 239 68 68;
+            --nasa-purple: 168 85 247;
+            --nasa-gray: 71 85 105;
+            --nasa-gray-light: 148 163 184;
+            
+            --background: 23 23 23;
+            --foreground: 250 250 250;
+            --card: 38 38 38;
+            --card-foreground: 250 250 250;
+            --border: 68 68 68;
+            --muted: 68 68 68;
+            --muted-foreground: 161 161 170;
+            --primary: 59 130 246;
+            --primary-foreground: 250 250 250;
+            --secondary: 68 68 68;
+            --secondary-foreground: 250 250 250;
+            --accent: 68 68 68;
+            --accent-foreground: 250 250 250;
+            --destructive: 239 68 68;
+            --ring: 147 197 253;
+        }
 
-    html, body {
-      height: 100%;
-      font-family: Arial, sans-serif;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: rgb(var(--background));
+            color: rgb(var(--foreground));
+            height: 100vh;
+            overflow: hidden;
+        }
 
-    .sidebar {
-      width: 300px;
-      background-color: #3366cc;
-      color: white;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
 
-    .sidebar h1 {
-      font-size: 28px;
-      border-bottom: 2px solid white;
-      padding-bottom: 10px;
-    }
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background-color: rgb(var(--card));
+            border-right: 1px solid rgb(var(--border));
+            padding: 24px;
+            overflow-y: auto;
+        }
 
-    .sidebar select {
-      padding: 8px;
-      font-size: 14px;
-      border-radius: 6px;
-      border: none;
-    }
+        .sidebar-header {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+            cursor: default;
+        }
 
-    .map-container {
-      flex: 1;
-      height: 100%;
-    }
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgb(var(--nasa-blue)), rgb(var(--nasa-purple)));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
 
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-  </style>
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: rgb(var(--foreground));
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgb(var(--muted-foreground));
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover {
+            background-color: rgb(var(--accent));
+        }
+
+        .nav-item.active {
+            background-color: rgb(var(--primary));
+            color: rgb(var(--primary-foreground));
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            margin-top: 30px;
+            background-color: rgb(var(--card));
+            border-bottom: 1px solid rgb(var(--border));
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            gap: 16px;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            color: rgb(var(--muted-foreground));
+            font-size: 14px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            background-color: rgb(var(--background));
+            border: 1px solid rgb(var(--border));
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: rgb(var(--foreground));
+            width: 300px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: rgb(var(--primary));
+            color: rgb(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            background-color: rgb(var(--nasa-blue-dark));
+        }
+
+        .btn-secondary {
+            background-color: rgb(var(--secondary));
+            color: rgb(var(--secondary-foreground));
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            color: rgb(var(--muted-foreground));
+            font-size: 16px;
+        }
+
+        .last-updated {
+            color: rgb(var(--muted-foreground));
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        button {
+          all: unset;
+          padding: 12px 16px;
+        }
+
+        a {
+          all: unset;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            background-color: rgb(var(--card));
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgb(var(--border));
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgb(var(--muted-foreground));
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            background-color: rgb(var(--background));
+            border: 1px solid rgb(var(--border));
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: rgb(var(--foreground));
+            min-width: 120px;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background-color: rgb(var(--card));
+            border: 1px solid rgb(var(--border));
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: rgb(var(--primary));
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .metric-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgb(var(--muted-foreground));
+        }
+
+        .metric-icon {
+            width: 24px;
+            height: 24px;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: rgb(var(--nasa-green));
+        }
+
+        .metric-change.negative {
+            color: rgb(var(--nasa-red));
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Map Container */
+        .map-container {
+            background-color: rgb(var(--card));
+            border: 1px solid rgb(var(--border));
+            border-radius: 12px;
+            overflow: hidden;
+            height: 600px;
+        }
+
+        .map-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgb(var(--border));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .map-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        #map {
+            height: calc(100% - 60px);
+            background-color: rgb(var(--background));
+        }
+
+        /* Event List */
+        .event-list-container {
+            background-color: rgb(var(--card));
+            border: 1px solid rgb(var(--border));
+            border-radius: 12px;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-list-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgb(var(--border));
+        }
+
+        .event-list-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .event-list {
+            flex: 1;
+            overflow-y: overlay;
+            padding: 16px;
+        }
+
+        .event-item {
+            padding: 16px;
+            border: 1px solid rgb(var(--border));
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover {
+            border-color: rgb(var(--primary));
+            background-color: rgb(var(--accent));
+        }
+
+        .event-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .event-severity {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .severity-low {
+            background-color: rgba(var(--nasa-green), 0.2);
+            color: rgb(var(--nasa-green));
+        }
+
+        .severity-medium {
+            background-color: rgba(var(--nasa-orange), 0.2);
+            color: rgb(var(--nasa-orange));
+        }
+
+        .severity-high {
+            background-color: rgba(var(--nasa-red), 0.2);
+            color: rgb(var(--nasa-red));
+        }
+
+        .severity-critical {
+            background-color: rgba(var(--nasa-purple), 0.2);
+            color: rgb(var(--nasa-purple));
+        }
+
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: rgb(var(--muted-foreground));
+        }
+
+        .event-category {
+            text-transform: capitalize;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            color: rgb(var(--muted-foreground));
+        }
+
+        .error {
+            background-color: rgba(var(--destructive), 0.1);
+            border: 1px solid rgb(var(--destructive));
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: rgb(var(--destructive));
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: rgb(var(--card));
+            border: 1px solid rgb(var(--border));
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: rgb(var(--muted-foreground));
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 16px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Leaflet Dark Theme */
+        .leaflet-container {
+            background: rgb(var(--background)) !important;
+        }
+
+        .leaflet-control-container .leaflet-control {
+            background: rgb(var(--card)) !important;
+            border: 1px solid rgb(var(--border)) !important;
+            color: rgb(var(--foreground)) !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: rgb(var(--card)) !important;
+            color: rgb(var(--foreground)) !important;
+        }
+
+        .leaflet-popup-tip {
+            background: rgb(var(--card)) !important;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="sidebar">
-      <h1>Meteo Advisor</h1>
-      <select>
-        <option value="">Categoría 1</option>
-        <option value="">Categoría 2</option>
-        <option value="">Categoría 3</option>
-      </select>
-      <select>
-        <option value="">Enlace 1</option>
-        <option value="">Opción A</option>
-        <option value="">Opción B</option>
-      </select>
-      <select>
-        <option value="">Enlace 2</option>
-        <option value="">Opción C</option>
-        <option value="">Opción D</option>
-      </select>
-      <select>
-        <option value="">Enlace 3</option>
-        <option value="">Opción E</option>
-        <option value="">Opción F</option>
-      </select>
-    </div>
-    <div class="map-container">
-      <div id="map"></div>
-    </div>
-  </div>
+    <div class="app-container">
+         <!-- Sidebar  -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🌍</div>
+                <div class="sidebar-title">NASA EONET</div>
+            </div>
+            
+            <div class="nav-section">
+                <h3>Navigation</h3>
+                <a href="#dashboard">
+                  <button class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                  </button>
+                </a>
+                <a href="#map-section">
+                  <button class="nav-item">
+                    <span class="nav-icon">🗺️</span>
+                    <span>Map View</span>
+                  </button>
+                </a>
+                <a href="#event_list-section">
+                  <button class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>Event List</span>
+                  </button>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3>Event Types</h3>
+                <div class="nav-item" data-category="wildfires">
+                    <span class="nav-icon">🔥</span>
+                    <span>Wildfires</span>
+                    <span class="event-count" id="wildfires-count">0</span>
+                </div>
+                <div class="nav-item" data-category="severeStorms">
+                    <span class="nav-icon">⛈️</span>
+                    <span>Severe Storms</span>
+                    <span class="event-count" id="storms-count">0</span>
+                </div>
+                <div class="nav-item" data-category="earthquakes">
+                    <span class="nav-icon">🌍</span>
+                    <span>Earthquakes</span>
+                    <span class="event-count" id="earthquakes-count">0</span>
+                </div>
+                <div class="nav-item" data-category="floods">
+                    <span class="nav-icon">🌊</span>
+                    <span>Floods</span>
+                    <span class="event-count" id="floods-count">0</span>
+                </div>
+                <div class="nav-item" data-category="volcanoes">
+                    <span class="nav-icon">🌋</span>
+                    <span>Volcanoes</span>
+                    <span class="event-count" id="volcanoes-count">0</span>
+                </div>
+            </div>
+        </div>
 
-  <script>
-    const map = L.map('map').setView([20, 0], 2); // Centrado en lat=20, lon=0, zoom 2
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+         <!-- Main Content  -->
+        <div class="main-content">
+             <!-- Header  -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="header-title">Climate Events Monitor</div>
+                    <div class="header-subtitle">Real-time tracking of extreme weather events worldwide</div>
+                    <div class="last-updated" id="last-updated"></div>
+                </div>
+                <div class="header-right">
+                    <input type="text" class="search-box" placeholder="Search events..." id="search-input">
+                    <button class="btn btn-primary" id="refresh-btn">
+                        <span>🔄</span>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+             <!-- Content  -->
+            <div class="content">
+                 <!-- Filters  -->
+                <div class="filters" id="dashboard">
+                    <div class="filter-group">
+                        <label class="filter-label">Category</label>
+                        <select class="filter-select" id="category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="wildfires">Wildfires</option>
+                            <option value="severeStorms">Severe Storms</option>
+                            <option value="earthquakes">Earthquakes</option>
+                            <option value="floods">Floods</option>
+                            <option value="volcanoes">Volcanoes</option>
+                            <option value="drought">Drought</option>
+                            <option value="landslides">Landslides</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="status-filter">
+                            <option value="open">Open Events</option>
+                            <option value="closed">Closed Events</option>
+                            <option value="all">All Events</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Severity</label>
+                        <select class="filter-select" id="severity-filter">
+                            <option value="all">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Time Range</label>
+                        <select class="filter-select" id="date-filter">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                    </div>
+                </div>
+
+                 <!-- Error Display  -->
+                <div class="error" id="error-display" style="display: none;"></div>
+
+                 <!-- Metrics Grid  -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Total Events</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-blue), 0.2);">📊</div>
+                        </div>
+                        <div class="metric-value" id="total-events">0</div>
+                        <div class="metric-change" id="total-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Critical Events</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-red), 0.2);">🚨</div>
+                        </div>
+                        <div class="metric-value" id="critical-events">0</div>
+                        <div class="metric-change" id="critical-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Active Wildfires</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-orange), 0.2);">🔥</div>
+                        </div>
+                        <div class="metric-value" id="wildfire-events">0</div>
+                        <div class="metric-change" id="wildfire-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Recent Earthquakes</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-purple), 0.2);">🌍</div>
+                        </div>
+                        <div class="metric-value" id="earthquake-events">0</div>
+                        <div class="metric-change" id="earthquake-change">Loading...</div>
+                    </div>
+                </div>
+
+                 <!-- Main Grid  -->
+                <div class="main-grid">
+                     <!-- Map  -->
+                    <div class="map-container" id="map-section">
+                        <div class="map-header">
+                            <div class="map-title">Global Event Map</div>
+                            <div class="map-controls">
+                                <button class="btn btn-secondary" id="center-map">🎯 Center</button>
+                                <button class="btn btn-secondary" id="toggle-layers">🗂️ Layers</button>
+                            </div>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+
+                     <!-- Event List  -->
+                    <div class="event-list-container" id="event_list-section">
+                        <div class="event-list-header">
+                            <div class="event-list-title">Recent Events</div>
+                        </div>
+                        <div class="event-list" id="event-list">
+                            <div class="loading">Loading events...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Event Detail Modal 
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Event Details</div>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div id="modal-body">
+                 Event details will be populated here 
+            </div>
+        </div>
+    </div>
+
+     Leaflet JS 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-}).addTo(map);
+     Main JavaScript 
+    <script>
+        // Global variables
+        let map;
+        let events = [];
+        let filteredEvents = [];
+        let markers = [];
+        let currentFilters = {
+            category: 'all',
+            status: 'open',
+            severity: 'all',
+            dateRange: 30
+        };
 
-// Cambiar cursor a pointer cuando está sobre el mapa
-const mapContainer = document.getElementById('map');
-map.getContainer().style.cursor = 'pointer';
-mapContainer.style.width = '1910px';
-mapContainer.style.height = '600px';
-  </script>
+        // NASA EONET API Configuration
+        const EONET_BASE_URL = 'https://eonet.gsfc.nasa.gov/api/v3';
+
+        // Event icons mapping
+        const EVENT_ICONS = {
+            wildfires: '🔥',
+            severeStorms: '⛈️',
+            earthquakes: '🌍',
+            floods: '🌊',
+            volcanoes: '🌋',
+            drought: '🏜️',
+            landslides: '⛰️',
+            dustHaze: '🌫️',
+            snow: '❄️',
+            tempExtremes: '🌡️',
+            seaLakeIce: '🧊',
+            manmade: '🏭',
+            waterColor: '🌊'
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+            setupEventListeners();
+            loadEvents();
+            
+            // Auto-refresh every 5 minutes
+            setInterval(loadEvents, 300000);
+        });
+
+        // Initialize Leaflet map
+        function initializeMap() {
+            map = L.map('map').setView([20, 0], 2);
+            
+            // Dark tile layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter changes
+            document.getElementById('category-filter').addEventListener('change', handleFilterChange);
+            document.getElementById('status-filter').addEventListener('change', handleFilterChange);
+            document.getElementById('severity-filter').addEventListener('change', handleFilterChange);
+            document.getElementById('date-filter').addEventListener('change', handleFilterChange);
+            
+            // Search
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+            
+            // Refresh button
+            document.getElementById('refresh-btn').addEventListener('click', loadEvents);
+            
+            // Map controls
+            document.getElementById('center-map').addEventListener('click', () => {
+                map.setView([20, 0], 2);
+            });
+            
+            // Modal
+            document.getElementById('close-modal').addEventListener('click', closeModal);
+            document.getElementById('event-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'event-modal') closeModal();
+            });
+            
+            // Category navigation
+            document.querySelectorAll('[data-category]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const category = e.currentTarget.dataset.category;
+                    document.getElementById('category-filter').value = category;
+                    handleFilterChange();
+                });
+            });
+        }
+
+        // Load events from NASA EONET API
+        async function loadEvents() {
+            try {
+                showLoading();
+                
+                const params = new URLSearchParams({
+                    status: currentFilters.status === 'all' ? 'open' : currentFilters.status,
+                    limit: '100'
+                });
+                
+                if (currentFilters.category !== 'all') {
+                    params.append('category', currentFilters.category);
+                }
+                
+                if (currentFilters.dateRange) {
+                    params.append('days', currentFilters.dateRange.toString());
+                }
+                
+                const response = await fetch(`${EONET_BASE_URL}/events?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                events = data.events.map(transformEvent);
+                
+                applyFilters();
+                updateUI();
+                updateLastUpdated();
+                hideError();
+                
+            } catch (error) {
+                console.error('Error loading events:', error);
+                showError(`Failed to load events: ${error.message}`);
+            }
+        }
+
+        // Transform EONET event to our format
+        function transformEvent(event) {
+            const latestGeometry = event.geometry[event.geometry.length - 1];
+            const coordinates = latestGeometry.type === 'Point' 
+                ? latestGeometry.coordinates 
+                : latestGeometry.coordinates[0];
+            
+            return {
+                id: event.id,
+                title: event.title,
+                description: event.description || '',
+                category: event.categories[0]?.id || 'unknown',
+                coordinates: [coordinates[1], coordinates[0]], // [lat, lng] for Leaflet
+                severity: calculateSeverity(event),
+                status: event.closed ? 'closed' : 'open',
+                date: latestGeometry.date,
+                magnitude: latestGeometry.magnitudeValue 
+                    ? `${latestGeometry.magnitudeValue} ${latestGeometry.magnitudeUnit || ''}`.trim()
+                    : null,
+                sources: event.sources.map(s => s.id),
+                link: event.link,
+                closed: event.closed
+            };
+        }
+
+        // Calculate event severity
+        function calculateSeverity(event) {
+            const category = event.categories[0]?.id;
+            const hasMultipleSources = event.sources.length > 2;
+            const isRecent = event.geometry.some(g => {
+                const eventDate = new Date(g.date);
+                const daysDiff = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+                return daysDiff < 7;
+            });
+
+            // Critical events
+            if (category === 'earthquakes' && event.geometry.some(g => g.magnitudeValue && g.magnitudeValue > 7)) {
+                return 'critical';
+            }
+            if (category === 'severeStorms' && hasMultipleSources && isRecent) {
+                return 'critical';
+            }
+            if (category === 'volcanoes' && isRecent) {
+                return 'critical';
+            }
+
+            // High severity
+            if ((category === 'wildfires' || category === 'floods') && hasMultipleSources && isRecent) {
+                return 'high';
+            }
+            if (category === 'earthquakes' && event.geometry.some(g => g.magnitudeValue && g.magnitudeValue > 5)) {
+                return 'high';
+            }
+
+            // Medium severity
+            if (isRecent && hasMultipleSources) {
+                return 'medium';
+            }
+
+            return 'low';
+        }
+
+        // Apply current filters
+        function applyFilters() {
+            filteredEvents = events.filter(event => {
+                // Category filter
+                if (currentFilters.category !== 'all' && event.category !== currentFilters.category) {
+                    return false;
+                }
+                
+                // Status filter
+                if (currentFilters.status !== 'all' && event.status !== currentFilters.status) {
+                    return false;
+                }
+                
+                // Severity filter
+                if (currentFilters.severity !== 'all' && event.severity !== currentFilters.severity) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        // Handle filter changes
+        function handleFilterChange() {
+            currentFilters.category = document.getElementById('category-filter').value;
+            currentFilters.status = document.getElementById('status-filter').value;
+            currentFilters.severity = document.getElementById('severity-filter').value;
+            currentFilters.dateRange = parseInt(document.getElementById('date-filter').value);
+            
+            applyFilters();
+            updateUI();
+        }
+
+        // Handle search
+        function handleSearch(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            if (searchTerm === '') {
+                applyFilters();
+            } else {
+                filteredEvents = events.filter(event => 
+                    event.title.toLowerCase().includes(searchTerm) ||
+                    event.category.toLowerCase().includes(searchTerm) ||
+                    event.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            updateUI();
+        }
+
+        // Update UI with current data
+        function updateUI() {
+            updateMetrics();
+            updateMap();
+            updateEventList();
+            updateCategoryCounts();
+        }
+
+        // Update metrics cards
+        function updateMetrics() {
+            const totalEvents = filteredEvents.length;
+            const criticalEvents = filteredEvents.filter(e => e.severity === 'critical').length;
+            const wildfireEvents = filteredEvents.filter(e => e.category === 'wildfires').length;
+            const earthquakeEvents = filteredEvents.filter(e => e.category === 'earthquakes').length;
+            
+            document.getElementById('total-events').textContent = totalEvents;
+            document.getElementById('critical-events').textContent = criticalEvents;
+            document.getElementById('wildfire-events').textContent = wildfireEvents;
+            document.getElementById('earthquake-events').textContent = earthquakeEvents;
+            
+            // Update change indicators (simplified)
+            document.getElementById('total-change').textContent = `${totalEvents} active events`;
+            document.getElementById('critical-change').textContent = `${criticalEvents} critical alerts`;
+            document.getElementById('wildfire-change').textContent = `${wildfireEvents} active fires`;
+            document.getElementById('earthquake-change').textContent = `${earthquakeEvents} recent quakes`;
+        }
+
+        // Update map markers
+        function updateMap() {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            
+            // Add new markers
+            filteredEvents.forEach(event => {
+                if (event.coordinates && event.coordinates.length === 2) {
+                    const icon = EVENT_ICONS[event.category] || '📍';
+                    const severityColor = getSeverityColor(event.severity);
+                    
+                    const marker = L.marker(event.coordinates, {
+                        icon: L.divIcon({
+                            html: `<div style="background-color: ${severityColor}; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2px solid white;">${icon}</div>`,
+                            className: 'custom-marker',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        })
+                    }).addTo(map);
+                    
+                    marker.bindPopup(`
+                        <div style="color: rgb(var(--foreground)); min-width: 200px;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 16px;">${event.title}</h3>
+                            <p style="margin: 0 0 8px 0; font-size: 12px; color: rgb(var(--muted-foreground));">
+                                <strong>Category:</strong> ${event.category}<br>
+                                <strong>Severity:</strong> <span class="severity-${event.severity}">${event.severity}</span><br>
+                                <strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}<br>
+                                ${event.magnitude ? `<strong>Magnitude:</strong> ${event.magnitude}<br>` : ''}
+                                <strong>Status:</strong> ${event.status}
+                            </p>
+                            <button onclick="showEventDetails('${event.id}')" style="background: rgb(var(--primary)); color: rgb(var(--primary-foreground)); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">View Details</button>
+                        </div>
+                    `);
+                    
+                    markers.push(marker);
+                }
+            });
+        }
+
+        // Update event list
+        function updateEventList() {
+            const eventList = document.getElementById('event-list');
+            
+            if (filteredEvents.length === 0) {
+                eventList.innerHTML = '<div class="loading">No events found matching current filters.</div>';
+                return;
+            }
+            
+            const sortedEvents = filteredEvents
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 20); // Show only first 20 events
+            
+            eventList.innerHTML = sortedEvents.map(event => `
+                <div class="event-item" onclick="showEventDetails('${event.id}')">
+                    <div class="event-header">
+                        <div class="event-title">${event.title}</div>
+                        <div class="event-severity severity-${event.severity}">${event.severity}</div>
+                    </div>
+                    <div class="event-meta">
+                        <span class="event-category">${EVENT_ICONS[event.category] || '📍'} ${event.category}</span>
+                        <span>${new Date(event.date).toLocaleDateString()}</span>
+                        <span>${event.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update category counts in sidebar
+        function updateCategoryCounts() {
+            const counts = {};
+            events.forEach(event => {
+                counts[event.category] = (counts[event.category] || 0) + 1;
+            });
+            
+            document.getElementById('wildfires-count').textContent = counts.wildfires || 0;
+            document.getElementById('storms-count').textContent = counts.severeStorms || 0;
+            document.getElementById('earthquakes-count').textContent = counts.earthquakes || 0;
+            document.getElementById('floods-count').textContent = counts.floods || 0;
+            document.getElementById('volcanoes-count').textContent = counts.volcanoes || 0;
+        }
+
+        // Show event details modal
+        function showEventDetails(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+            
+            document.getElementById('modal-title').textContent = event.title;
+            document.getElementById('modal-body').innerHTML = `
+                <div style="space-y: 16px;">
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 8px;">Event Information</h4>
+                        <p><strong>Category:</strong> ${EVENT_ICONS[event.category] || '📍'} ${event.category}</p>
+                        <p><strong>Severity:</strong> <span class="severity-${event.severity}">${event.severity}</span></p>
+                        <p><strong>Status:</strong> ${event.status}</p>
+                        <p><strong>Date:</strong> ${new Date(event.date).toLocaleString()}</p>
+                        ${event.magnitude ? `<p><strong>Magnitude:</strong> ${event.magnitude}</p>` : ''}
+                        ${event.closed ? `<p><strong>Closed:</strong> ${new Date(event.closed).toLocaleString()}</p>` : ''}
+                    </div>
+                    
+                    ${event.description ? `
+                        <div>
+                            <h4 style="font-weight: 600; margin-bottom: 8px;">Description</h4>
+                            <p>${event.description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 8px;">Location</h4>
+                        <p><strong>Coordinates:</strong> ${event.coordinates[0].toFixed(4)}, ${event.coordinates[1].toFixed(4)}</p>
+                    </div>
+                    
+                    <div>
+                        <h4 style="font-weight: 600; margin-bottom: 8px;">Sources</h4>
+                        <p>${event.sources.join(', ')}</p>
+                    </div>
+                    
+                    <div>
+                        <a href="${event.link}" target="_blank" style="color: rgb(var(--primary)); text-decoration: none;">
+                            View on NASA EONET →
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('event-modal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('event-modal').classList.remove('show');
+        }
+
+        // Get severity color
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'critical': return `rgb(var(--nasa-purple))`;
+                case 'high': return `rgb(var(--nasa-red))`;
+                case 'medium': return `rgb(var(--nasa-orange))`;
+                case 'low': return `rgb(var(--nasa-green))`;
+                default: return `rgb(var(--nasa-blue))`;
+            }
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('event-list').innerHTML = '<div class="loading">Loading events...</div>';
+        }
+
+        // Show error
+        function showError(message) {
+            const errorDiv = document.getElementById('error-display');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Hide error
+        function hideError() {
+            document.getElementById('error-display').style.display = 'none';
+        }
+
+        // Update last updated timestamp
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent = `Last updated: ${now.toLocaleTimeString()}`;
+        }
+    </script>
 </body>
 </html>
