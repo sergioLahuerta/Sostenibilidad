@@ -1,35 +1,234 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Meteo Advisor</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="map.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meteo Advisor</title>
+    <link rel="icon" href="./src/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.webglearth.com/v2/api.js" defer></script>  <!--Globo 3D-->
+    <script src="./js/functionsEonet.js" defer></script>
+    <script src="./js/functionsOpenMeteo.js" defer></script>
+    <script src="./js/buttons.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Meteo Advisor</h1>
-      <nav class="nav-bar">
-        <ul class="nav-list">
-          <li>
-            <select class="nav-select">
-              <option value="">Categoría 1</option>
-              <option value="">Categoría 2</option>
-              <option value="">Categoría 3</option>
-            </select>
-          </li>
-          <li><a href="#">Enlace 1</a></li>
-          <li><a href="#">Enlace 2</a></li>
-          <li><a href="#">Enlace 3</a></li>
-        </ul>
-      </nav>
-    </header>
+    <div class="app-container">
+         <!-- Sidebar  -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><img src="./src/favicon.png" alt="Logo de la web consistente en tres picos que crean una montaña en la que dentro hay un rayo." style="width: 40px;"></div>
+                <div class="sidebar-title">NASA EONET</div>
+            </div>
+            
+            <div class="nav-section">
+                <h3>Navigation</h3>
+                <a href="#dashboard-section">
+                  <button class="nav-item active">
+                    <span class="nav-icon"><img class="img-icon" src="./src/dashboard-icon.png" alt=""></span>
+                    <span>Dashboard</span>
+                  </button>
+                </a>
+                <a href="#map-section">
+                  <button class="nav-item">
+                    <span class="nav-icon"><img class="img-icon" src="./src/map-icon.png" alt=""></span>
+                    <span>Map View</span>
+                  </button>
+                </a>
+                <a href="#event_list-section">
+                  <button class="nav-item">
+                    <span class="nav-icon"><img class="img-icon" src="./src/list-icon.png" alt=""></span>
+                    <span>Event List</span>
+                  </button>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h3>Event Types</h3>
+                <div class="nav-item" data-category="wildfires">
+                    <span class="nav-icon">🔥</span>
+                    <span>Wildfires</span>
+                    <span class="event-count" id="wildfires-count">0</span>
+                </div>
+                <div class="nav-item" data-category="severeStorms">
+                    <span class="nav-icon">⛈️</span>
+                    <span>Severe Storms</span>
+                    <span class="event-count" id="storms-count">0</span>
+                </div>
+                <div class="nav-item" data-category="earthquakes">
+                    <span class="nav-icon">🌍</span>
+                    <span>Earthquakes</span>
+                    <span class="event-count" id="earthquakes-count">0</span>
+                </div>
+                <div class="nav-item" data-category="floods">
+                    <span class="nav-icon">🌊</span>
+                    <span>Floods</span>
+                    <span class="event-count" id="floods-count">0</span>
+                </div>
+                <div class="nav-item" data-category="volcanoes">
+                    <span class="nav-icon">🌋</span>
+                    <span>Volcanoes</span>
+                    <span class="event-count" id="volcanoes-count">0</span>
+                </div>
+            </div>
+        </div>
 
-    <div id="map" class="map"></div>
-  </div>
+         <!-- Main Content  -->
+        <div class="main-content">
+             <!-- Header  -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="header-title">Meteo Advisor</div>
+                    <div class="header-subtitle">Real-time tracking of extreme weather events worldwide</div>
+                    <div class="last-updated" id="last-updated"></div>
+                </div>
+                <div class="header-right">
+                    <input type="text" class="search-box" placeholder="Search events..." id="search-input">
+                    <button class="btn btn-primary" id="refresh-btn">
+                        <span>🔄</span>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+             <!-- Content  -->
+            <div class="content">
+                 <!-- Filters  -->
+                <div class="filters" id="dashboard-section">
+                    <div class="filter-group">
+                        <label class="filter-label">Category</label>
+                        <select class="filter-select" id="category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="wildfires">Wildfires</option>
+                            <option value="severeStorms">Severe Storms</option>
+                            <option value="earthquakes">Earthquakes</option>
+                            <option value="floods">Floods</option>
+                            <option value="volcanoes">Volcanoes</option>
+                            <option value="drought">Drought</option>
+                            <option value="landslides">Landslides</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="status-filter">
+                            <option value="open">Open Events</option>
+                            <option value="closed">Closed Events</option>
+                            <option value="all">All Events</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Severity</label>
+                        <select class="filter-select" id="severity-filter">
+                            <option value="all">All Severities</option>
+                            <option value="critical">Critical</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Time Range</label>
+                        <select class="filter-select" id="date-filter">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                    </div>
+                </div>
+
+                 <!-- Error Display  -->
+                <div class="error" id="error-display" style="display: none;"></div>
+
+                 <!-- Metrics Grid  -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Total Events</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-blue), 0.2);">📊</div>
+                        </div>
+                        <div class="metric-value" id="total-events">0</div>
+                        <div class="metric-change" id="total-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Critical Events</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-red), 0.2);">🚨</div>
+                        </div>
+                        <div class="metric-value" id="critical-events">0</div>
+                        <div class="metric-change" id="critical-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Active Wildfires</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-orange), 0.2);">🔥</div>
+                        </div>
+                        <div class="metric-value" id="wildfire-events">0</div>
+                        <div class="metric-change" id="wildfire-change">Loading...</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-title">Recent Earthquakes</div>
+                            <div class="metric-icon" style="background-color: rgba(var(--nasa-purple), 0.2);">🌍</div>
+                        </div>
+                        <div class="metric-value" id="earthquake-events">0</div>
+                        <div class="metric-change" id="earthquake-change">Loading...</div>
+                    </div>
+                </div>
+
+                 <!-- Main Grid  -->
+                <div class="main-grid">
+                     <!-- Map  -->
+                    <div class="map-container" id="map-section">
+                        <div class="map-header">
+                            <div class="map-title">Global Event Map</div>
+                            <div class="map-controls">
+                                <button class="btn btn-secondary" id="center-map">🎯 Center</button>
+                                <button class="btn btn-secondary" id="toggle-layers">🗂️ Layers</button>
+                            </div>
+                        </div>
+                        <div id="map"></div>
+                    </div>
+
+                    <!-- Modal Ciudades -->
+                     <div class="modal-cities" id="cities"></div>
+
+                     <!-- Mapa 3D -->
+                     <div id="earth" style="height: 600px; width: 100%;"></div>
+
+                     <!-- Event List  -->
+                    <div class="event-list-container" id="event_list-section">
+                        <div class="event-list-header">
+                            <div class="event-list-title">Recent Events</div>
+                        </div>
+                        <div class="event-list" id="event-list">
+                            <div class="loading">Loading events...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     Event Detail Modal 
+    <div class="modal" id="event-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title">Event Details</div>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div id="modal-body">
+                 Event details will be populated here 
+            </div>
+        </div>
+    </div>
+
+     Leaflet JS 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+     Main JavaScript 
+    <script>
+
+    </script>
 </body>
 </html>
